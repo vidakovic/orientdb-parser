@@ -11,7 +11,13 @@
     <url>http://antlr.org</url>
 
     <properties>
-        <antlr.version>4.3</antlr.version>
+        <!--
+        see details here: https://github.com/antlr/antlr4/issues/675
+
+        <antlr.groupId>org.antlr</antlr.groupId>
+        -->
+        <antlr.groupId>com.tunnelvisionlabs</antlr.groupId>
+        <antlr.version>4.4</antlr.version>
         <slf4j.version>1.7.9</slf4j.version>
         <logback.version>1.1.2</logback.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -53,7 +59,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.antlr</groupId>
+            <groupId>${antlr.groupId}</groupId>
             <artifactId>antlr4-runtime</artifactId>
             <version>${antlr.version}</version>
             <scope>compile</scope>
@@ -100,7 +106,7 @@
             </plugin>
 
             <plugin>
-                <groupId>org.antlr</groupId>
+                <groupId>${antlr.groupId}</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
                 <version>${antlr.version}</version>
                 <executions>
