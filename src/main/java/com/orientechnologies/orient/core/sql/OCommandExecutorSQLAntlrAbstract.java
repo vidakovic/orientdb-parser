@@ -8,6 +8,7 @@ import com.orientechnologies.orient.parser.OrientSqlParserListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 
@@ -23,7 +24,7 @@ public abstract class OCommandExecutorSQLAntlrAbstract extends OCommandExecutorS
 
         stream = new ANTLRInputStream(parserText);
         parser = new OrientSqlParser(new CommonTokenStream(new OrientSqlLexer(stream)));
-        addParseListener(new CommonOrientSqlParserListener());
+        parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         return this;
     }

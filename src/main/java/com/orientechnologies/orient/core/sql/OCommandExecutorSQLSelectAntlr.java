@@ -158,7 +158,7 @@ public class OCommandExecutorSQLSelectAntlr extends OCommandExecutorSQLAntlrAbst
     }
 
     // NOTE: this listener class replaces all the manual parser method calls (at least for this class)
-    protected class SelectOrientSqlParserListener extends OrientSqlParserBaseListener {
+    protected class SelectOrientSqlParserListener extends CommonOrientSqlParserListener {
         @Override
         public void enterProjection(@NotNull OrientSqlParser.ProjectionContext ctx) {
             projections = new LinkedHashMap<String, Object>();
