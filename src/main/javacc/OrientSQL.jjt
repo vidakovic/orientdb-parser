@@ -1,0 +1,1666 @@
+/*
+  *
+  *  *  Copyright 2014 Orient Technologies LTD (info(at)orientechnologies.com)
+  *  *
+  *  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  *  you may not use this file except in compliance with the License.
+  *  *  You may obtain a copy of the License at
+  *  *
+  *  *       http://www.apache.org/licenses/LICENSE-2.0
+  *  *
+  *  *  Unless required by applicable law or agreed to in writing, software
+  *  *  distributed under the License is distributed on an "AS IS" BASIS,
+  *  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  *  See the License for the specific language governing permissions and
+  *  *  limitations under the License.
+  *  *
+  *  * For more information: http://www.orientechnologies.com
+  *
+  */
+
+
+options {
+	TRACK_TOKENS = true;
+  	JDK_VERSION = "1.6";
+  	MULTI=true;
+  	VISITOR=true;
+  	STATIC=false;
+  	NODE_PREFIX="O";
+}
+
+PARSER_BEGIN(OrientSql)
+
+package com.orientechnologies.orient.core.sql.parser;
+
+/** Orient Database Sql grammar. */
+public class OrientSql {
+
+    /** Main entry point. For development purpose only */
+  public static void main(String args[]) {
+    System.out.println("Reading from standard input...");
+    OrientSql t = new OrientSql(System.in);
+    try {
+      OStatement n = t.parse();
+      n.dump("");
+      System.out.println("Thank you.");
+    } catch (Exception e) {
+      System.out.println("Oops.");
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+    }
+  }
+
+}
+
+PARSER_END(OrientSql)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+
+
+/* reserved words */
+TOKEN:
+{
+	< SELECT: ( "s" | "S" ) ( "e" | "E" ) ( "l" | "L" ) ( "e" | "E" ) ( "c" | "C" ) ( "t" | "T" ) >
+	|
+	< TRAVERSE: ( "t" | "T") ( "r" | "R") ( "a" | "A") ( "v" | "V") ( "e" | "E") ( "r" | "R") ( "s" | "S") ( "e" | "E") >
+	|
+	< INSERT: ( "i" | "I" ) ( "n" | "N" ) ( "s" | "S" ) ( "e" | "E" ) ( "r" | "R" ) ( "t" | "T" ) >
+	|
+	< CREATE: ( "c" | "C" ) ( "r" | "R" ) ( "e" | "E" ) ( "a" | "a" ) ( "t" | "T" ) ( "e" | "E" ) >
+	|
+	< DELETE: ( "d" | "D" ) ( "e" | "E" ) ( "l" | "L" ) ( "e" | "E" ) ( "t" | "T" ) ( "e" | "E" ) >
+	|
+	< VERTEX: ( "v" | "V" ) ( "e" | "E" ) ( "r" | "R" ) ( "t" | "T" ) ( "e" | "E" ) ( "x" | "X" ) >
+	|
+	< EDGE: ( "e" | "E" ) ( "d" | "D" ) ( "g" | "G" ) ( "e" | "E" ) >
+	|
+	< UPDATE: ( "u" | "U" ) ( "p" | "P" ) ( "d" | "D" ) ( "a" | "A" ) ( "t" | "T" ) ( "e" | "E" ) >
+	|
+	< UPSERT: ( "u" | "U" ) ( "p" | "P" ) ( "s" | "S" ) ( "e" | "E" ) ( "r" | "R" ) ( "t" | "T" ) >
+	|
+	< FROM: ( "f" | "F" ) ( "r" | "R" ) ( "o" | "O" ) ( "m" | "M" ) >
+	|
+	< TO: ( "t" | "T" ) ( "o" | "O" ) >
+	|
+	< WHERE: ( "w" | "W" ) ( "h" | "H" ) ( "e" | "E" ) ( "r" | "R" ) ( "e" | "E" ) >
+	|
+	< WHILE: ( "w" | "W" ) ( "h" | "H" ) ( "i" | "I" ) ( "l" | "L" ) ( "e" | "E" ) >
+	|
+	< INTO: ( "i" | "I" ) ( "n" | "N" ) ( "t" | "T" ) ( "o" | "O" ) >
+	|
+	< VALUES: ( "v" | "V" ) ( "a" | "A" ) ( "l" | "L" ) ( "u" | "U" ) ( "e" | "E" ) ( "s" | "S" )>
+	|
+	< SET: ( "s" | "S" ) ( "e" | "E" ) ( "t" | "T" ) >
+	|
+	< ADD: ( "a" | "A" ) ( "d" | "D" ) ( "d" | "D" ) >
+	|
+	< PUT: ( "p" | "P" ) ( "u" | "U" ) ( "t" | "T" ) >
+	|
+	< MERGE: ( "m" | "M" ) ( "e" | "E" ) ( "r" | "R" ) ( "g" | "G" ) ( "e" | "E" ) >
+	|
+	< CONTENT: ( "c" | "C" ) ( "o" | "O" ) ( "n" | "N" ) ( "t" | "T" ) ( "e" | "E" ) ( "n" | "N" ) ( "t" | "T" )  >
+	|
+	< REMOVE: ( "r" | "R" ) ( "e" | "E" ) ( "m" | "M" ) ( "o" | "O" ) ( "v" | "V" ) ( "e" | "E" ) >
+	|
+	< INCREMENT: ( "i" | "I" ) ( "n" | "N" ) ( "c" | "C" ) ( "r" | "R" ) ( "e" | "E" ) ( "m" | "M" ) ( "e" | "E" ) ( "n" | "N" ) ( "t" | "T" ) >
+	|
+	< AND: ( "a" | "A" ) ( "n" | "N" ) ( "d" | "D" ) >
+	|
+	< OR: ( "o" | "O" ) ( "r" | "R" ) >
+	|
+	< NULL: ( "N" | "n" ) ( "U" | "u" ) ( "L" | "l" ) ( "L" | "l" ) >
+	|
+	< DEFINED: ( "D" | "d" ) ( "E" | "e" ) ( "F" | "f" ) ( "I" | "i" ) ( "N" | "n" ) ( "E" | "e" ) ( "D" | "d" ) >
+    |
+    < ORDER: ( "o" | "O" ) ( "r" | "R" ) ( "d" | "D" ) ( "e" | "E" ) ( "r" | "R" ) >
+	|
+	< GROUP: ( "g" | "G" ) ( "r" | "R" ) ( "o" | "O" ) ( "u" | "U" ) ( "p" | "P" ) >
+	|
+	< BY: ( "b" | "B" ) ( "y" | "Y" ) >
+	|
+	< LIMIT: ( "l" | "L" ) ( "i" | "I" ) ( "m" | "M" ) ( "i" | "I" ) ( "t" | "T" ) >
+	|
+	< SKIP2: ( "s" | "S" ) ( "k" | "K" ) ( "i" | "I" ) ( "p" | "P" ) >
+	|
+	< OFFSET: ( "o" | "O" ) ( "f" | "F" ) ( "f" | "F" ) ( "s" | "S" ) ( "e" | "E" ) ( "t" | "T" ) >
+	|
+	< TIMEOUT: ( "t" | "T" ) ( "i" | "I" ) ( "m" | "M" ) ( "e" | "E" ) ( "o" | "O" ) ( "u" | "U" ) ( "t" | "T" ) >
+	|
+	< ASC: ( "a" | "A" ) ( "s" | "S" ) ( "c" | "C" ) >
+	|
+	< AS: ( "a" | "A" ) ( "s" | "S" ) >
+	|
+	< DESC: ( "d" | "D" ) ( "e" | "E" ) ( "s" | "S" ) ( "c" | "C" ) >
+	|
+	< FETCHPLAN: ( "f" | "F" ) ( "e" | "E" ) ( "t" | "T" ) ( "c" | "C" ) ( "h" | "H" ) ( "p" | "P" ) ( "l" | "L" ) ( "a" | "A" ) ( "n" | "N" ) >
+	|
+	< RETURN: ( "r" | "R" ) ( "e" | "E" ) ( "t" | "T" ) ( "u" | "U" ) ( "r" | "R" ) ( "n" | "N" ) >
+	|
+	< BEFORE: ( "b" | "B" ) ( "e" | "E" ) ( "f" | "F" ) ( "o" | "O" ) ( "r" | "R" ) ( "e" | "E" ) >
+	|
+	< AFTER: ( "a" | "A" ) ( "f" | "F" ) ( "t" | "T" ) ( "e" | "E" ) ( "r" | "R" ) >
+	|
+	< LOCK: ( "l" | "L" ) ( "o" | "O" ) ( "c" | "C" ) ( "k" | "K" ) >
+    |
+    < RECORD: ( "r" | "R" ) ( "e" | "E" ) ( "c" | "C" ) ( "o" | "O" ) ( "r" | "R" ) ( "d" | "D" ) >
+    |
+    < WAIT: ( "w" | "W" ) ( "a" | "A" ) ( "i" | "I" ) ( "t" | "T" ) >
+    |
+    < RETRY: ( "r" | "R" ) ( "e" | "E" ) ( "t" | "T" ) ( "r" | "R" ) ( "y" | "Y" ) >
+    |
+    < LET: ( "l" | "L" ) ( "e" | "E" ) ( "t" | "T" ) >
+	|
+	< THIS: "@this" >
+	|
+	< RECORD_ATTRIBUTE: <RID_ATTR> | <CLASS_ATTR> | <VERSION_ATTR> | <SIZE_ATTR> | <TYPE_ATTR> | <RAW_ATTR> >
+	|
+	< #RID_ATTR: "@" ( ( "r" | "R" ) ( "i" | "I" ) ( "d" | "D" )) >
+	|
+	< #CLASS_ATTR: "@class" >
+	|
+	< #VERSION_ATTR: "@version" >
+	|
+	< #SIZE_ATTR: "@size" >
+	|
+	< #TYPE_ATTR: "@type" >
+    |
+	< #RAW_ATTR: "@raw" >
+}
+
+
+/* LITERALS */
+
+TOKEN :
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL> (["l","L"])?
+      | <HEX_LITERAL> (["l","L"])?
+      | <OCTAL_LITERAL> (["l","L"])?
+  >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+  < FLOATING_POINT_LITERAL:
+        <DECIMAL_FLOATING_POINT_LITERAL>
+      | <HEXADECIMAL_FLOATING_POINT_LITERAL>
+  >
+|
+  < #DECIMAL_FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<DECIMAL_EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<DECIMAL_EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <DECIMAL_EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<DECIMAL_EXPONENT>)? ["f","F","d","D"]
+  >
+|
+  < #DECIMAL_EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+  < #HEXADECIMAL_FLOATING_POINT_LITERAL:
+        "0" ["x", "X"] (["0"-"9","a"-"f","A"-"F"])+ (".")? <HEXADECIMAL_EXPONENT> (["f","F","d","D"])?
+      | "0" ["x", "X"] (["0"-"9","a"-"f","A"-"F"])* "." (["0"-"9","a"-"f","A"-"F"])+ <HEXADECIMAL_EXPONENT> (["f","F","d","D"])?
+  >
+|
+  < #HEXADECIMAL_EXPONENT: ["p","P"] (["+","-"])? (["0"-"9"])+ >
+|
+  < CHARACTER_LITERAL:
+      "'"
+      (   (~["'","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )
+      "'"
+  >
+|
+  < STRING_LITERAL:
+      (
+	      "\""
+	      (   (~["\"","\\","\n","\r"])
+	        | ("\\"
+	            ( ["n","t","b","r","f","\\","'","\""]
+	            | ["0"-"7"] ( ["0"-"7"] )?
+	            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+	            )
+	          )
+	      )*
+	      "\""
+      )
+      |
+      (
+	      "'"
+	      (   (~["\'","\\","\n","\r"])
+	        | ("\\"
+	            ( ["n","t","b","r","f","\\","'","\""]
+	            | ["0"-"7"] ( ["0"-"7"] )?
+	            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+	            )
+	          )
+	      )*
+	      "'"
+      )
+  >
+  |
+  < INTEGER_RANGE:
+    (<MINUS>)? <INTEGER_LITERAL> <RANGE> (<MINUS>)?<INTEGER_LITERAL>
+  >
+  |
+  < TRUE: "true" >
+  |
+  < FALSE: "false" >
+}
+
+
+
+/* SEPARATORS */
+
+TOKEN :
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < COMMA: "," >
+| < DOT: "." >
+| < AT: "@" >
+}
+
+/* OPERATORS */
+
+TOKEN :
+{
+
+  < EQ: "=" >
+| < LT: "<" >
+| < GT: ">" >
+| < BANG: "!" >
+| < TILDE: "~" >
+| < HOOK: "?" >
+| < COLON: ":" >
+| < LE: "<=" >
+| < GE: ">=" >
+| < NE: "!=" >
+| < NEQ: "<>" >
+| < SC_OR: "||" >
+| < SC_AND: "&&" >
+| < INCR: "++" >
+| < DECR: "--" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < STAR: "*" >
+| < SLASH: "/" >
+| < BIT_AND: "&" >
+| < BIT_OR: "|" >
+| < XOR: "^" >
+| < REM: "%" >
+| < LSHIFT: "<<" >
+| < PLUSASSIGN: "+=" >
+| < MINUSASSIGN: "-=" >
+| < STARASSIGN: "*=" >
+| < SLASHASSIGN: "/=" >
+| < ANDASSIGN: "&=" >
+| < ORASSIGN: "|=" >
+| < XORASSIGN: "^=" >
+| < REMASSIGN: "%=" >
+| < LSHIFTASSIGN: "<<=" >
+| < RSIGNEDSHIFTASSIGN: ">>=" >
+| < RUNSIGNEDSHIFTASSIGN: ">>>=" >
+| < ELLIPSIS: "..." >
+| < RANGE: ".." >
+| < NOT: ( "N" | "n") ( "O" | "o") ( "T" | "t")  >
+| < IN: ( "I" | "i") ( "N" | "n") >
+| < LIKE: ( "L" | "l") ( "I" | "i") ( "K" | "k") ( "E" | "e") >
+| < IS: "is" | "IS" | "Is" | "iS" >
+| < BETWEEN: ( "B" | "b") ( "E" | "e") ( "T" | "t") ( "W" | "w") ( "E" | "e") ( "E" | "e") ( "N" | "n")>
+| < CONTAINS: ( "C" | "c" ) ( "O" | "o" ) ( "N" | "n" ) ( "T" | "t" ) ( "A" | "a" ) ( "I" | "i" ) ( "N" | "n" ) ( "S" | "s" ) >
+| < CONTAINSALL: ( "C" | "c" ) ( "O" | "o" ) ( "N" | "n" ) ( "T" | "t" ) ( "A" | "a" ) ( "I" | "i" ) ( "N" | "n" ) ( "S" | "s" ) ( "A" | "a" ) ( "L" | "l" ) ( "L" | "l" ) >
+| < CONTAINSKEY: ( "C" | "c" ) ( "O" | "o" ) ( "N" | "n" ) ( "T" | "t" ) ( "A" | "a" ) ( "I" | "i" ) ( "N" | "n" ) ( "S" | "s" ) ( "K" | "k" ) ( "E" | "e" ) ( "Y" | "y" ) >
+| < CONTAINSVALUE: ( "C" | "c" ) ( "O" | "o" ) ( "N" | "n" ) ( "T" | "t" ) ( "A" | "a" ) ( "I" | "i" ) ( "N" | "n" ) ( "S" | "s" ) ( "V" | "v" ) ( "A" | "a" ) ( "L" | "l" ) ( "U" | "u" ) ( "E" | "e" ) >
+| < CONTAINSTEXT: ( "C" | "c" ) ( "O" | "o" ) ( "N" | "n" ) ( "T" | "t" ) ( "A" | "a" ) ( "I" | "i" ) ( "N" | "n" ) ( "S" | "s" ) ( "T" | "t" ) ( "E" | "e" ) ( "X" | "x" ) ( "T" | "t" ) >
+| < MATCHES: ( "M" | "m") ( "A" | "a") ( "T" | "t") ( "C" | "c") ( "H" | "h") ( "E" | "e") ( "S" | "s") >
+| < KEY: ( "K" | "k") ( "E" | "e") ( "Y" | "y") >
+| < INSTANCEOF: "instanceof" >
+| < CLUSTER: "cluster" >
+
+}
+
+
+
+TOKEN :
+{
+  < IDENTIFIER: ( <LETTER> (<PART_LETTER>)* ) >
+|
+  < INDEX_IDENTIFIER: "index:" <IDENTIFIER> ( ( <DOT> | <MINUS> ) <IDENTIFIER> )*  >
+|
+  < INDEXVALUES_IDENTIFIER: "indexvalues:" <IDENTIFIER> ( ( <DOT> | <MINUS> ) <IDENTIFIER> )*  >
+|
+  < INDEXVALUESASC_IDENTIFIER: "indexvaluesasc:" <IDENTIFIER> ( ( <DOT> | <MINUS> ) <IDENTIFIER> )*  >
+|
+  < INDEXVALUESDESC_IDENTIFIER: "indexvaluesdesc:" <IDENTIFIER> ( ( <DOT> | <MINUS> ) <IDENTIFIER> )*  >
+|
+  < CLUSTER_IDENTIFIER: <CLUSTER> <COLON> <IDENTIFIER>  >
+|
+  < METADATA_IDENTIFIER: "metadata:" <IDENTIFIER>  >
+|
+  < #LETTER:
+      [  "A"-"Z",
+         "_",
+         "a"-"z"
+      ]
+  >
+|
+  < #PART_LETTER:
+      [  "0"-"9",
+         "A"-"Z",
+         "_",
+         "a"-"z"
+      ]
+  >
+}
+
+void Rid():
+{}
+{
+	 LOOKAHEAD(4)
+	 "#" <INTEGER_LITERAL> <COLON> <INTEGER_LITERAL>
+	 |
+	 LOOKAHEAD(3)
+	 <INTEGER_LITERAL> <COLON> <INTEGER_LITERAL>
+}
+
+/** Root production. */
+OStatement parse() :
+{OStatement result;}
+{
+  result = Statement() <EOF>
+  { return result; }
+}
+
+OIdentifier Identifier():
+{Token token;}
+{
+(
+    token = <IDENTIFIER>
+    |
+    token = <IN>
+    |
+    token = <SET>
+    |
+    token = <PUT>
+    |
+    token = <ADD>
+    |
+    token = <REMOVE>
+    |
+    token = <MERGE>
+    |
+    token = <CONTENT>
+    |
+    token = <ORDER>
+    |
+    token = <KEY>
+    |
+    token = <OFFSET>
+    |
+    token = <GROUP>
+    |
+    token = <VALUES>
+    |
+    token = <RECORD>
+    |
+    token = <TO>
+) { jjtThis.value = token.image; return jjtThis; }
+}
+
+OInteger Integer():
+{
+    int sign = 1;
+    Token tokenVal;
+}
+{
+(
+    [ <MINUS> {sign = -1;} ] tokenVal = <INTEGER_LITERAL> {jjtThis.value = sign * Integer.parseInt(tokenVal.image);}
+) { return jjtThis; }
+}
+
+OFloatingPoint FloatingPoint():
+{
+String stringValue;
+Token tokenVal;
+}
+{
+(
+    [ <MINUS> { jjtThis.sign = -1; } ] tokenVal = <FLOATING_POINT_LITERAL> { jjtThis.stringValue = tokenVal.image; }
+){ return jjtThis; }
+}
+
+ONumber Number():
+{ ONumber result; }
+{
+(
+    LOOKAHEAD( Integer() )
+    result = Integer()
+    |
+    LOOKAHEAD( FloatingPoint() )
+    result = FloatingPoint()
+) { return result; }
+}
+
+
+OStatement Statement():
+{ OStatement result = null;}
+{
+	(
+	    LOOKAHEAD( SelectStatement() )
+		result = SelectStatement()
+		|
+		result = SelectWithoutTargetStatement()
+		|
+		result = TraverseStatement()
+        |
+        LOOKAHEAD(2)
+		result = DeleteStatement()
+		|
+		LOOKAHEAD(2)
+		result = DeleteVertexStatement()
+		|
+		result = InsertStatement()
+		|
+		LOOKAHEAD(CreateVertexStatement())
+		result = CreateVertexStatement()
+		|
+		LOOKAHEAD(CreateVertexStatementNoTarget())
+		result = CreateVertexStatementNoTarget()
+		|
+		LOOKAHEAD(2)
+        result = CreateEdgeStatement()
+        |
+		result = UpdateStatement()
+
+	) { return result; }
+}
+
+OSelectWithoutTargetStatement SelectWithoutTargetStatement():
+{}
+{
+(
+	<SELECT> ValueItem() [<AS> Alias() ] ( <COMMA> ValueItem() [<AS> Alias() ] )* [ FetchPlan() ]
+) { return jjtThis; }
+}
+
+OSelectStatement SelectStatement():
+{}
+{
+(
+	<SELECT>
+    [ jjtThis.projection = Projection() ]
+    <FROM>
+    jjtThis.target = FromClause()
+    [ jjtThis.letClause = LetClause() ]
+    [ <WHERE> jjtThis.whereClause = WhereClause() ]
+    [ jjtThis.orderBy = OrderBy() ]
+    [ jjtThis.groupBy = GroupBy() ]
+    (
+        [
+            jjtThis.skip = Skip() [ jjtThis.limit = Limit() ]
+            |
+            jjtThis.limit = Limit() [ jjtThis.skip = Skip() ]
+        ]
+    )
+    [ jjtThis.fetchPlan = FetchPlan() ]
+    [ <LOCK> <RECORD> {jjtThis.lockRecord = true;} ]
+) {return jjtThis;}
+}
+
+OTraverseStatement TraverseStatement():
+{}
+{
+(
+	<TRAVERSE>
+	[ TraverseProjectionItem() ( <COMMA> TraverseProjectionItem() )* ]
+	<FROM>
+	FromClause()
+	[ <WHILE> WhereClause() ]
+    [ Limit() ]
+) {return jjtThis;}
+}
+
+
+ODeleteStatement DeleteStatement():
+{}
+{
+(
+	<DELETE>
+	<FROM>
+	FromClause()
+	[ <WHERE> WhereClause() ]
+) {return jjtThis;}
+}
+
+ODeleteVertexStatement DeleteVertexStatement():
+{}
+{
+(
+	<DELETE>
+	<VERTEX>
+	FromClause()
+	[ <WHERE> WhereClause() ]
+) {return jjtThis;}
+}
+
+OUpdateStatement UpdateStatement():
+{}
+{
+(
+	<UPDATE>
+	(
+	    Rid()
+	    |
+		Identifier()
+		|
+		Cluster()
+		|
+		IndexIdentifier()
+	)
+	( UpdateOperations() )+
+	[ <UPSERT> ]
+	[ <RETURN> ( <BEFORE> | <AFTER> ) [ Projection() ] ]
+	[ <WHERE> WhereClause() ]
+	[ <LOCK> <RECORD> ]
+	[ Limit() ]
+	[ Timeout() ]
+) {return jjtThis;}
+}
+
+void UpdateOperations():
+{}
+{
+    ( <SET> UpdateItem() ( <COMMA> UpdateItem() )* )
+    |
+    ( <PUT> UpdatePutItem() ( <COMMA> UpdatePutItem() )* )
+    |
+    (
+        ( <MERGE> | <CONTENT> )
+        UpdateMergeItem() ( <COMMA> UpdateMergeItem() )*
+    )
+    |
+    (
+        (
+            <INCREMENT>
+            |
+            <ADD>
+        )
+        UpdateIncrementItem() ( <COMMA> UpdateIncrementItem() )*
+     )
+     |
+     ( <REMOVE> UpdateRemoveItem() ( <COMMA> UpdateRemoveItem() )* )
+}
+
+
+OUpdateItem UpdateItem():
+{}
+{
+(
+	Identifier()
+	(
+	    <EQ>
+	    |
+	    <PLUSASSIGN>
+        |
+        <MINUSASSIGN>
+        |
+        <STARASSIGN>
+        |
+        <SLASHASSIGN>
+	)
+	Expression()
+) { return jjtThis; }
+}
+
+void UpdateIncrementItem():
+{}
+{
+	Identifier() <EQ> Expression()
+}
+
+void UpdateRemoveItem():
+{}
+{
+	Identifier() [ <EQ> Expression() ]
+}
+
+void UpdatePutItem():
+{}
+{
+	Identifier() <EQ> Expression() <COMMA> Expression()
+}
+
+void UpdateMergeItem():
+{}
+{
+	Identifier() <EQ> Json()
+}
+
+void UpdateAddItem():
+{}
+{
+	Identifier() <EQ>
+	(
+		<STRING_LITERAL>
+		|
+		LOOKAHEAD(Rid())
+		Rid()
+		|
+		LOOKAHEAD(3)
+		Integer()
+		|
+		<FLOATING_POINT_LITERAL>
+		|
+		<CHARACTER_LITERAL>
+		|
+		<LBRACKET> Rid() ("," Rid())* <RBRACKET>
+	)
+
+}
+
+
+OInsertStatement InsertStatement():
+{}
+{
+(
+	<INSERT>
+	<INTO>
+	(
+	    Identifier() [<CLUSTER> Identifier()]
+	    |
+	    Cluster()
+	    |
+	    IndexIdentifier()
+	)
+    InsertBody()
+) {return jjtThis;}
+}
+
+
+void InsertBody():
+{}
+{
+    (
+        LOOKAHEAD(2)
+        (
+            <LPAREN> Identifier() (<COMMA> Identifier())* <RPAREN>
+            <VALUES>
+            <LPAREN> Expression() (<COMMA> Expression())* <RPAREN>
+        )
+        |
+        LOOKAHEAD(3)
+        (
+            <SET>
+            Identifier() <EQ> Expression()
+            ( <COMMA> Identifier() <EQ> Expression() )*
+        )
+        |
+        (
+            [ <FROM> ]
+            (
+                SelectStatement()
+                |
+                LOOKAHEAD(2)
+                (
+                    <LPAREN> SelectStatement() <RPAREN>
+                )
+            )
+        )
+        |
+        ( <CONTENT> Json() )
+    )
+    [ <RETURN> Projection() ]
+}
+
+
+OCreateVertexStatement CreateVertexStatement():
+{}
+{
+(
+	<CREATE>
+	<VERTEX>
+	(
+	    LOOKAHEAD(3)
+	    Identifier()
+	    |
+	    Cluster()
+	)
+	[ InsertBody() ]
+) {return jjtThis;}
+}
+
+OCreateVertexStatementNoTarget CreateVertexStatementNoTarget():
+{}
+{
+(
+	<CREATE>
+	<VERTEX>
+	[ InsertBody() ]
+) {return jjtThis;}
+}
+
+
+OCreateEdgeStatement CreateEdgeStatement():
+{}
+{
+(
+	<CREATE>
+	<EDGE>
+	[ Identifier() ]
+	<FROM>
+	(
+	    Rid()
+	    |
+	    ( <LBRACKET> [ Rid() ( <COMMA> Rid() )* ] <RBRACKET> )
+	    |
+	    ( <LPAREN> ( LOOKAHEAD(SelectStatement()) SelectStatement() | LOOKAHEAD(SelectWithoutTargetStatement()) SelectWithoutTargetStatement() ) <RPAREN> )
+	)
+	<TO>
+	(
+        Rid()
+        |
+        ( <LBRACKET> [ Rid() ( <COMMA> Rid() )* ] <RBRACKET> )
+        |
+        ( <LPAREN> ( LOOKAHEAD(SelectStatement()) SelectStatement() | LOOKAHEAD(SelectWithoutTargetStatement()) SelectWithoutTargetStatement() ) <RPAREN> )
+    )
+    [ InsertBody() ]
+    [ Retry() ]
+    [ Wait() ]
+) {return jjtThis;}
+}
+
+
+OInputParameter InputParameter():
+{}
+{
+(
+	PositionalParameter()
+	|
+	NamedParameter()
+){return jjtThis;}
+}
+
+void PositionalParameter():
+{}
+{
+	<HOOK>
+}
+
+void NamedParameter():
+{}
+{
+	<COLON> Identifier()
+}
+
+OProjection Projection():
+{
+    java.util.List<OProjectionItem> items = new java.util.ArrayList<OProjectionItem>();
+    OProjectionItem lastItem = null;
+}
+{
+    (
+	 	lastItem = ProjectionItem() {items.add(lastItem);} ( "," lastItem = ProjectionItem() {items.add(lastItem);} )*
+	)
+	{jjtThis.items = items; return jjtThis;}
+}
+
+OProjectionItem ProjectionItem():
+{}
+{
+(
+	"*" {jjtThis.all = true;}
+	|
+	(
+        jjtThis.expression = Expression()
+		[ <AS> jjtThis.alias = Alias() ]
+	)
+){return jjtThis;}
+}
+
+void ValueItem():
+{}
+{
+    (
+        <NULL>
+        |
+        <FLOATING_POINT_LITERAL>
+        |
+        LOOKAHEAD( Integer() )
+        Integer()
+        |
+        (
+            (
+                LOOKAHEAD( Rid() )
+                Rid()
+                |
+                Array()
+                |
+                Json()
+                |
+                <CHARACTER_LITERAL>
+                |
+                LOOKAHEAD(2)
+                <STRING_LITERAL>
+                |
+                LOOKAHEAD( InputParameter() )
+                InputParameter()
+                |
+                LOOKAHEAD( FunctionCall() )
+                FunctionCall()
+            )
+            [ LOOKAHEAD( Modifier() ) Modifier() ]
+        )
+        |
+        LOOKAHEAD(2)
+        (<LPAREN> SelectStatement() <RPAREN> )
+    )
+}
+
+void ArraySelector():
+{}
+{
+	LOOKAHEAD( Rid() )
+	Rid()
+	|
+	LOOKAHEAD( InputParameter() )
+    InputParameter()
+    |
+    LOOKAHEAD( Expression() )
+	Expression()
+}
+
+void ArrayNumberSelector():
+{}
+{
+	LOOKAHEAD( InputParameter() )
+    InputParameter()
+    |
+    LOOKAHEAD( Expression() )
+	MathExpression()
+}
+
+void ArraySingleValuesSelector():
+{}
+{
+    ( ArraySelector() ( <COMMA> ArraySelector() )* )
+}
+
+void ArrayRangeSelector():
+{}
+{
+    <INTEGER_RANGE>
+    |
+    (
+        ArrayNumberSelector() <RANGE> ArrayNumberSelector()
+    )
+}
+
+
+String Alias():
+{ OIdentifier identifier; }
+{
+	identifier = Identifier()
+	{return identifier.getValue();}
+}
+
+void RecordAttribute():
+{}
+{
+	<RECORD_ATTRIBUTE>
+}
+
+void ThisOperation():
+{}
+{
+	<THIS> ( MethodCall() )*
+}
+
+void FunctionCall():
+{
+OExpression lastExpression = null;}
+{
+	Identifier()
+	<LPAREN>
+	(
+		<STAR> { jjtThis.star = true;}
+		|
+		(
+			[
+			lastExpression = Expression() {jjtThis.params.add(lastExpression);} ( <COMMA> lastExpression = Expression() {jjtThis.params.add(lastExpression);})*
+			]
+		)
+	)
+	<RPAREN>
+}
+
+void MethodCall():
+{}
+{
+	( <DOT> Identifier() <LPAREN> [ Expression() ( <COMMA> Expression() )* ] <RPAREN> )
+}
+
+void LevelZeroIdentifier():
+{}
+{
+    LOOKAHEAD( FunctionCall() )
+    FunctionCall()
+    |
+    <THIS>
+    |
+    LOOKAHEAD( Collection() )
+    Collection()
+}
+
+void SuffixIdentifier():
+{}
+{
+    LOOKAHEAD( Identifier() )
+    Identifier()
+    |
+    LOOKAHEAD( RecordAttribute() )
+    RecordAttribute()
+}
+
+
+void BaseIdentifier():
+{}
+{
+    LOOKAHEAD( LevelZeroIdentifier() )
+    LevelZeroIdentifier()
+    |
+    LOOKAHEAD( SuffixIdentifier() )
+    SuffixIdentifier()
+}
+
+void Modifier():
+{}
+{
+
+    (
+
+        (
+            <LBRACKET>
+                (
+                    LOOKAHEAD( ArrayRangeSelector() )
+                    ArrayRangeSelector()
+                    |
+                    LOOKAHEAD( OrBlock() )
+                    OrBlock()
+                    |
+                    LOOKAHEAD( ArraySingleValuesSelector() )
+                    ArraySingleValuesSelector()
+                )
+            <RBRACKET>
+        )
+   	    |
+   	    LOOKAHEAD( MethodCall() )
+   	    MethodCall()
+   	    |
+        <DOT> SuffixIdentifier()
+    )
+    [
+        LOOKAHEAD( Modifier() )
+        Modifier()
+    ]
+}
+
+OExpression Expression():
+{}
+{
+    (
+        <NULL>
+        |
+        LOOKAHEAD(2)
+        <STRING_LITERAL>
+        |
+        <CHARACTER_LITERAL>
+        |
+        LOOKAHEAD( Rid() )
+        Rid()
+        |
+        LOOKAHEAD( InputParameter() )
+        InputParameter()
+        |
+        MathExpression()
+        |
+        Json()
+        |
+        <TRUE>
+        |
+        <FALSE>
+	)
+	{ return jjtThis; }
+}
+
+void MathExpression():
+{}
+{
+	MultExpression() (  LOOKAHEAD( 2 ) ( <PLUS> | <MINUS> ) MultExpression() )*
+}
+
+
+void MultExpression():
+{}
+{
+    FirstLevelExpression() (  LOOKAHEAD( 2 ) ( <STAR> | <SLASH> | <REM> ) FirstLevelExpression() )*
+}
+
+void FirstLevelExpression():
+{}
+{
+    LOOKAHEAD( ParenthesisExpression() )
+    ParenthesisExpression()
+    |
+    LOOKAHEAD( BaseExpression() )
+    BaseExpression()
+}
+
+void ParenthesisExpression():
+{}
+{
+	<LPAREN> ( Expression() | SelectStatement() ) <RPAREN>
+}
+
+void BaseExpression():
+{}
+{
+    Number()
+    |
+    (
+	    BaseIdentifier() [ LOOKAHEAD( Modifier() ) Modifier() ]
+	)
+}
+
+
+
+OFromClause FromClause():
+{}
+{
+	FromItem()
+	{ return jjtThis; }
+}
+
+OLetClause LetClause():
+{}
+{
+(
+    <LET> LetItem() ( <COMMA> LetItem() )*
+) { return jjtThis; }
+}
+
+OLetItem LetItem():
+{}
+{
+(
+	Identifier() <EQ> Expression()
+) { return jjtThis; }
+}
+
+
+OFromItem FromItem():
+{}
+{
+(
+	Rid()
+	|
+	<LBRACKET> Rid() ( <COMMA> Rid())* <RBRACKET>
+	|
+	Cluster()
+	|
+	IndexIdentifier()
+	|
+    MetadataIdentifier()
+	|
+	jjtThis.className = Identifier()
+	|
+	<LPAREN> ( SelectStatement() | TraverseStatement() ) <RPAREN>
+) { return jjtThis; }
+}
+
+OCluster Cluster():
+{}
+{
+	<CLUSTER_IDENTIFIER>
+    { return jjtThis; }
+}
+
+void MetadataIdentifier():
+{}
+{
+	<METADATA_IDENTIFIER>
+
+}
+
+void IndexIdentifier():
+{}
+{
+	<INDEX_IDENTIFIER>
+	|
+	<INDEXVALUES_IDENTIFIER>
+	|
+	<INDEXVALUESASC_IDENTIFIER>
+	|
+	<INDEXVALUESDESC_IDENTIFIER>
+}
+
+OWhereClause WhereClause():
+{}
+{
+	OrBlock()
+	{return jjtThis;}
+}
+
+OOrBlock OrBlock():
+{ OAndBlock lastAnd = null; }
+{
+(
+	lastAnd = AndBlock() { jjtThis.getSubBlocks().add(lastAnd); }
+	( <OR> lastAnd = AndBlock() { jjtThis.getSubBlocks().add(lastAnd); } )*
+) { return jjtThis; }
+}
+
+OAndBlock AndBlock():
+{ONotBlock lastNot = null; }
+{
+(
+    lastNot = NotBlock() { jjtThis.getSubBlocks().add(lastNot); }
+    ( <AND> lastNot = NotBlock() { jjtThis.getSubBlocks().add(lastNot); } )*
+) { return jjtThis; }
+}
+
+ONotBlock NotBlock():
+{}
+{
+(
+    (
+        <NOT> {jjtThis.negate = true;}
+        (
+            LOOKAHEAD( ConditionBlock() )
+            jjtThis.sub = ConditionBlock()
+            |
+            LOOKAHEAD( ParenthesisBlock() )
+            jjtThis.sub = ParenthesisBlock()
+        )
+    )
+    |
+    (
+        LOOKAHEAD( ConditionBlock() )
+        jjtThis.sub = ConditionBlock()
+        |
+        LOOKAHEAD( ParenthesisBlock() )
+        jjtThis.sub = ParenthesisBlock()
+    )
+) { return jjtThis; }
+}
+
+OBooleanExpression ParenthesisBlock():
+{OBooleanExpression subElement = null; }
+{
+(
+	<LPAREN> subElement = OrBlock() <RPAREN>
+){ return subElement; }
+}
+
+OBooleanExpression ConditionBlock():
+{OBooleanExpression result = null;}
+{
+(
+	LOOKAHEAD( IsNotNullCondition() )
+	result = IsNotNullCondition()
+	|
+	LOOKAHEAD( IsNullCondition() )
+	result = IsNullCondition()
+	|
+	LOOKAHEAD( IsNotDefinedCondition() )
+	result = IsNotDefinedCondition()
+	|
+	LOOKAHEAD( IsDefinedCondition() )
+	result = IsDefinedCondition()
+	|
+	LOOKAHEAD( InCondition() )
+    result = InCondition()
+    |
+    LOOKAHEAD( NotInCondition() )
+    result = NotInCondition()
+	|
+	LOOKAHEAD( BinaryCondition() )
+	result = BinaryCondition()
+	|
+	LOOKAHEAD( BetweenCondition() )
+	result = BetweenCondition()
+	|
+	LOOKAHEAD( ContainsCondition() )
+	result = ContainsCondition()
+	|
+	LOOKAHEAD( ContainsValueCondition() )
+	result = ContainsValueCondition()
+	|
+	LOOKAHEAD( ContainsAllCondition() )
+    result = ContainsAllCondition()
+    |
+    LOOKAHEAD( ContainsTextCondition() )
+	result = ContainsTextCondition()
+	|
+	LOOKAHEAD( MatchesCondition() )
+	result = MatchesCondition()
+	|
+	LOOKAHEAD( IndexMatchCondition() )
+	result = IndexMatchCondition()
+	|
+    LOOKAHEAD( InstanceofCondition() )
+    result = InstanceofCondition()
+){ return result; }
+}
+
+OBinaryCompareOperator CompareOperator():
+{  OBinaryCompareOperator result;}
+{
+(
+		result = EqualsCompareOperator()
+      | result = LtOperator()
+      | result = GtOperator()
+      | result = NeOperator()
+      | result = NeqOperator()
+      | result = GeOperator()
+      | result = LeOperator()
+      | result = LikeOperator()
+      | result = ContainsKeyOperator()
+){return result;}
+}
+
+
+OLtOperator LtOperator():
+{}
+{
+(
+	<LT>
+){return jjtThis;}
+}
+
+OGtOperator GtOperator():
+{}
+{
+(
+	<GT>
+){return jjtThis;}
+}
+
+ONeOperator NeOperator():
+{}
+{
+(
+	<NE>
+){return jjtThis;}
+}
+
+ONeqOperator NeqOperator():
+{}
+{
+(
+	<NEQ>
+){return jjtThis;}
+}
+
+OGeOperator GeOperator():
+{}
+{
+(
+	<GE>
+){return jjtThis;}
+}
+
+OLeOperator LeOperator():
+{}
+{
+(
+	<LE>
+){return jjtThis;}
+}
+
+OLikeOperator LikeOperator():
+{}
+{
+(
+	<LIKE>
+){return jjtThis;}
+}
+
+OContainsKeyOperator ContainsKeyOperator():
+{}
+{
+(
+	<CONTAINSKEY>
+){return jjtThis;}
+}
+
+OContainsValueOperator ContainsValueOperator():
+{}
+{
+(
+	<CONTAINSVALUE>
+){return jjtThis;}
+}
+
+OEqualsCompareOperator EqualsCompareOperator():
+{}
+{
+(
+	<EQ>
+){return jjtThis;}
+}
+
+OBooleanExpression BinaryCondition():
+{}
+{
+(
+ 	jjtThis.left = Expression()
+ 	jjtThis.operator = CompareOperator()
+ 	jjtThis.right = Expression()
+){return jjtThis;}
+}
+
+OBooleanExpression ContainsValueCondition():
+{}
+{
+(
+    jjtThis.left = Expression()
+    jjtThis.operator = ContainsValueOperator()
+    (
+        LOOKAHEAD( 3 )
+        <LPAREN> jjtThis.condition = OrBlock() <RPAREN>
+        |
+        LOOKAHEAD( Expression() )
+        jjtThis.expression = Expression()
+    )
+) { return jjtThis;}
+}
+
+OBooleanExpression InstanceofCondition():
+{}
+{
+(
+    Expression() <INSTANCEOF> ( Identifier() | <STRING_LITERAL> )
+){return jjtThis;}
+}
+
+OBooleanExpression IndexMatchCondition():
+{}
+{
+(
+ 	<KEY>
+ 	(
+ 	    CompareOperator() <LBRACKET> [ Expression() ( <COMMA> Expression() )* ] <RBRACKET>
+ 	    |
+ 	    <BETWEEN> <LBRACKET> [ Expression() ( <COMMA> Expression() )* ] <RBRACKET> <AND> <LBRACKET> [ Expression() ( <COMMA> Expression() )* ] <RBRACKET>
+ 	)
+){return jjtThis;}
+}
+
+OBooleanExpression BetweenCondition():
+{}
+{
+(
+	jjtThis.first = Expression() <BETWEEN>
+	jjtThis.second = Expression() <AND>
+	jjtThis.third = Expression()
+){return jjtThis;}
+}
+
+OBooleanExpression IsNullCondition():
+{}
+{
+(
+	jjtThis.expression = Expression() <IS> <NULL>
+){return jjtThis;}
+}
+
+OBooleanExpression IsNotNullCondition():
+{}
+{
+(
+	jjtThis.expression = Expression() <IS> <NOT> <NULL>
+){return jjtThis;}
+}
+
+OBooleanExpression IsDefinedCondition():
+{}
+{
+(
+	jjtThis.expression = Expression() <IS> <DEFINED>
+){return jjtThis;}
+}
+
+OBooleanExpression IsNotDefinedCondition():
+{}
+{
+(
+	jjtThis.expression = Expression() <IS> <NOT> <DEFINED>
+){return jjtThis;}
+}
+
+OBooleanExpression ContainsCondition():
+{}
+{
+(
+	jjtThis.left = Expression() <CONTAINS>
+
+	(
+	    LOOKAHEAD( 3 )
+	    ( <LPAREN> jjtThis.condition = OrBlock() <RPAREN> )
+	    |
+	    LOOKAHEAD( Expression() )
+	    jjtThis.right = Expression()
+	)
+){return jjtThis;}
+}
+
+OInOperator InOperator():
+{}
+{
+    <IN>
+    {return jjtThis;}
+}
+
+OBooleanExpression InCondition():
+{OExpression lastExpression;}
+{
+(
+	jjtThis.left = Expression()
+	jjtThis.operator = InOperator()
+	(
+	    (
+	        <LBRACKET>
+	        lastExpression = Expression()
+	        {
+	            jjtThis.rightCollection = new java.util.ArrayList();
+	            jjtThis.rightCollection.add(lastExpression);
+	        }
+	        (<COMMA> lastExpression = Expression())* <RBRACKET> )
+	    |
+	    ( <LPAREN> jjtThis.rightStatement = SelectStatement() <RPAREN>)
+	    |
+	    jjtThis.rightParam = InputParameter()
+	)
+){return jjtThis;}
+}
+
+OBooleanExpression NotInCondition():
+{}
+{
+(
+	Expression() <NOT> InOperator()
+	(
+	    ( <LBRACKET> Expression() (<COMMA> Expression())* <RBRACKET> )
+        |
+        ( <LPAREN> SelectStatement() <RPAREN> )
+	)
+){return jjtThis;}
+}
+
+OBooleanExpression ContainsAllCondition():
+{}
+{
+(
+	Expression() <CONTAINSALL> <LPAREN> OrBlock() <RPAREN>
+){return jjtThis;}
+}
+
+OBooleanExpression ContainsTextCondition():
+{}
+{
+(
+	Expression() <CONTAINSTEXT> Expression()
+){return jjtThis;}
+}
+
+OBooleanExpression MatchesCondition():
+{}
+{
+(
+	Expression() <MATCHES> <STRING_LITERAL>
+){return jjtThis;}
+}
+
+OOrderBy OrderBy():
+{}
+{
+(
+	<ORDER> <BY> ( Identifier() | Rid() | <RECORD_ATTRIBUTE> ) [ <DESC> | <ASC> ]
+	( "," ( Identifier() | Rid() | <RECORD_ATTRIBUTE> )  [ <DESC> | <ASC> ] )*
+) {return jjtThis;}
+}
+
+OGroupBy GroupBy():
+{}
+{
+(
+	<GROUP> <BY> Identifier() ( "," Identifier() )*
+) {return jjtThis;}
+}
+
+
+Integer Limit():
+{ OInteger value = null; }
+{
+(
+	<LIMIT> value = Integer()
+){ return value.getValue(); }
+}
+
+Integer Skip():
+{ OInteger value = null;}
+{
+(
+	<SKIP2> value = Integer()
+	|
+	<OFFSET> value = Integer()
+) {return value.getValue();}
+}
+
+void Timeout():
+{}
+{
+	<TIMEOUT> Integer()
+}
+
+
+void Wait():
+{}
+{
+	<WAIT> Integer()
+}
+
+
+void Retry():
+{}
+{
+	<RETRY> Integer()
+}
+
+
+
+
+
+
+
+void Collection():
+{}
+{
+    <LBRACKET> Expression() ( <COMMA> Expression() )* <RBRACKET>
+}
+
+
+
+OFetchPlan FetchPlan():
+{}
+{
+(
+    <FETCHPLAN> FetchPlanItem() ( FetchPlanItem() )*
+){ return jjtThis; }
+}
+
+void FetchPlanItem():
+{}
+{
+    (
+        <STAR>
+        |
+        Identifier() ( <DOT> Identifier() )*
+    )
+    <COLON> Integer()
+}
+
+
+
+void TraverseProjectionItem():
+{}
+{
+    <STAR>
+    |
+    (
+        BaseIdentifier() [ LOOKAHEAD( Modifier() ) Modifier() ]
+    )
+
+}
+
+void Array():
+{}
+{
+    <LBRACKET> [ Expression() ( <COMMA> Expression() )* ] <RBRACKET>
+}
+
+
+void Json():
+{}
+{
+    <LBRACE>
+    [
+        ( Identifier() | <STRING_LITERAL> ) <COLON> Expression()
+        ( <COMMA> ( Identifier() | <STRING_LITERAL> ) <COLON> Expression() )*
+    ]
+    <RBRACE>
+}
+
+
+
+
